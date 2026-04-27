@@ -3,38 +3,43 @@ import pandas as pd
 from database_connect import get_conn
 
 st.title("Bank Dashboard")
-#connection
+
 conn = get_conn()
 
-df = pd.read_sql("SELECT TOP 50 * FROM dbo.CustomerAudit ORDER BY CustomerAuditID DESC;", conn)
-
+# Latest events
+df = pd.read_sql("""
+    SELECT TOP 50 
+        CustomerAuditID,
+        LoginID,
+        CAST(EventTime AS DATETIME) AS EventTime,
+        Action,
+        IPAddress
+    FROM dbo.CustomerAudit 
+    ORDER BY CustomerAuditID DESC
+""", conn)
 st.dataframe(df)
 
-#event graph 
+# Event graph 
 st.subheader("Events by Action")
 df_actions = pd.read_sql("""
-    SELECT Action, COUNT(*) as Count
+    SELECT Action as action, COUNT(*) as count
     FROM dbo.CustomerAudit
     GROUP BY Action
 """, conn)
-st.bar_chart(df_actions.set_index("Action"))
+st.bar_chart(df_actions.set_index("action"))
 
-#fraud indication
-st.subheader("⚠️ Suspicious Users")
+# Fraud indication
+st.subheader("⚠️ Suspicious Activity")
 df_fraud = pd.read_sql("""
-    SELECT LoginID, COUNT(*) as FailedLogins
-    FROM dbo.CustomerAudit
-    WHERE Action = 'LOGIN_FAILURE'
-    GROUP BY LoginID
-    HAVING COUNT(*) > 10
-    ORDER BY FailedLogins DESC
+    SELECT IPAddress, CAST(EventTime AS DATETIME) AS EventTime, fails_5min
+    FROM dbo.v_FailureBursts
+    ORDER BY fails_5min DESC
 """, conn)
 
 if df_fraud.empty:
-    st.succcess("No suspicous activity detected")
+    st.success("No suspicious activity detected")
 else:
-    st.warning(f"{len(df_fraud)} user(s) flagged!")
+    st.warning(f"{len(df_fraud)} suspicious IP(s) flagged!")
     st.dataframe(df_fraud)
-
 
 conn.close()
