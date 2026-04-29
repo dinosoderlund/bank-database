@@ -1,15 +1,15 @@
-#connecting to database 
 import pypyodbc as odbc
 
-DRIVER = "ODBC Driver 17 for SQL Server" 
-SERVER = r"DINOPC"                        
+DRIVER = "ODBC Driver 17 for SQL Server"
+SERVER = "host.docker.internal,1433"
 DATABASE = "Bank_databas"
 
 CONN_STR = (
     f"DRIVER={{{DRIVER}}};"
     f"SERVER={SERVER};"
     f"DATABASE={DATABASE};"
-    "Trusted_Connection=yes;"
+    "UID=bankuser;"
+    "PWD=BankPass123!;"
     "Encrypt=no;"
 )
 

@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pypyodbc
+streamlit
+pandas
+faker
